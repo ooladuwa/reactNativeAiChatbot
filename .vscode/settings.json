@@ -5,6 +5,9 @@
   "editor.formatOnType": false,
   "prettier.requireConfig": false,
   "prettier.useEditorConfig": false,
+  "prettier.packageManager": "yarn",
+  "prettier.resolveGlobalModules": true,
+  "prettier.enable": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
