@@ -1,19 +1,2 @@
-export const dummyMessages = [
-  {
-    role: 'user',
-    content: 'How are you?',
-  },
-  {
-    role: 'assistant',
-    content: "I'm fine. How may I help you today?",
-  },
-  {
-    role: 'user',
-    content: 'create an image of two cute dogs playing together',
-  },
-  {
-    role: 'assistant',
-    content:
-      'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=1200&auto=format&fit=crop',
-  },
-];
+export const openAiKey =
+  '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';

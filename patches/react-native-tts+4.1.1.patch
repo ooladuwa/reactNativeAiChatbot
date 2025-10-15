@@ -1,0 +1,33 @@
+diff --git a/node_modules/react-native-tts/ios/TextToSpeech/TextToSpeech.m b/node_modules/react-native-tts/ios/TextToSpeech/TextToSpeech.m
+index 1e769cc..69884bf 100644
+--- a/node_modules/react-native-tts/ios/TextToSpeech/TextToSpeech.m
++++ b/node_modules/react-native-tts/ios/TextToSpeech/TextToSpeech.m
+@@ -94,21 +94,17 @@ RCT_EXPORT_METHOD(speak:(NSString *)text
+     resolve([NSNumber numberWithUnsignedLong:utterance.hash]);
+ }
+ 
+-RCT_EXPORT_METHOD(stop:(BOOL *)onWordBoundary resolve:(RCTPromiseResolveBlock)resolve reject:(__unused RCTPromiseRejectBlock)reject)
++RCT_EXPORT_METHOD(stop:(nullable NSNumber *)onWordBoundary
++                  resolve:(RCTPromiseResolveBlock)resolve
++                  reject:(__unused RCTPromiseRejectBlock)reject)
+ {
+-    AVSpeechBoundary boundary;
+-
+-    if(onWordBoundary != NULL && onWordBoundary) {
+-        boundary = AVSpeechBoundaryWord;
+-    } else {
+-        boundary = AVSpeechBoundaryImmediate;
+-    }
+-
++    BOOL useWordBoundary = onWordBoundary ? [onWordBoundary boolValue] : NO;
++    AVSpeechBoundary boundary = useWordBoundary ? AVSpeechBoundaryWord : AVSpeechBoundaryImmediate;
+     BOOL stopped = [self.synthesizer stopSpeakingAtBoundary:boundary];
+-
+-    resolve([NSNumber numberWithBool:stopped]);
++    resolve(@(stopped));
+ }
+ 
++
+ RCT_EXPORT_METHOD(pause:(BOOL *)onWordBoundary resolve:(RCTPromiseResolveBlock)resolve reject:(__unused RCTPromiseRejectBlock)reject)
+ {
+     AVSpeechBoundary boundary;

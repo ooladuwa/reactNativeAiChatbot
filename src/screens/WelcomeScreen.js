@@ -28,8 +28,8 @@ const WelcomeScreen = () => {
       </View>
       <View className="flex-1 items-center justify-center bg-white">
         <Image
-          style={{ width: wp(45), height: hp(45) }}
-          source={require('../../assets/images/aiChatbot.png')}
+          style={{ width: wp(45), height: hp(25) }}
+          source={require('../../assets/images/aiChatbot2.png')}
         />
       </View>
       <TouchableOpacity

@@ -1,20 +1,137 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
-import Features from '../components/features';
-import { dummyMessages } from '../constants';
+import Voice from '@react-native-voice/voice';
+import Features from '../components/Features';
+import { apiCall } from '../api/openAi';
+import LoadingSpinner from '../components/LoadingSpinner';
+import Tts from 'react-native-tts';
 
 const HomeScreen = () => {
-  const [messages, setMessages] = useState(dummyMessages);
+  const [messages, setMessages] = useState([]);
   const [recording, setRecording] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+  const scrollViewRef = useRef();
 
-  const clear = () => setMessages([]);
-  const stopSpeaking = () => setSpeaking(false);
+  // Methods
+  const clear = () => {
+    Tts.stop();
+    setMessages([]);
+    setSpeaking(false);
+  };
+  const stopSpeaking = () => {
+    setSpeaking(false);
+    Tts.stop();
+  };
+  const speechStartHandler = () => {
+    console.log('speech start handler');
+  };
+  const speechEndHandler = () => {
+    setRecording(false);
+    console.log('speech end handler');
+  };
+  const speechResultsHandler = e => {
+    const text = e.value[0];
+    setResult(text);
+    console.log('speech event', e);
+  };
+  const speechErrorHandler = e => {
+    console.log('speech error', e);
+  };
+
+  const startRecording = async () => {
+    setRecording(true);
+    Tts.stop();
+    setSpeaking(false);
+    try {
+      await Voice.start('en-US'); // if erroring, try en-GB
+    } catch (error) {
+      console.log('start recording error', error);
+    }
+  };
+
+  const stopRecording = async () => {
+    try {
+      await Voice.stop();
+      setRecording(false);
+      // fetch response from chatGPT
+      fetchResponse();
+    } catch (error) {
+      console.log('stop recording error', error);
+    }
+  };
+
+  const fetchResponse = () => {
+    if (result.trim().length > 0) {
+      let newMessages = [...messages];
+      newMessages.push({ role: 'user', content: result.trim() });
+      setMessages([...newMessages]);
+      updateScrollView();
+      setLoading(true);
+      apiCall(result.trim(), newMessages).then(res => {
+        setLoading(false);
+        if (res.success) {
+          setMessages([...res.data]);
+          updateScrollView();
+          setResult('');
+          startTextToSpeech(res.data[res.data.length - 1]);
+        } else {
+          Alert.alert('Error', res.msg);
+        }
+      });
+    }
+  };
+
+  const startTextToSpeech = message => {
+    if (!message.content.includes('https')) {
+      setSpeaking(true);
+      Tts.speak(message.content, {
+        iosVoiceId: 'com.apple.ttsbundle.Moira-compact',
+        rate: 0.5,
+      });
+    }
+  };
+
+  const updateScrollView = () => {
+    setTimeout(() => {
+      scrollViewRef?.current?.scrollToEnd({ animated: true });
+    }, 200);
+  };
+
+  useEffect(() => {
+    console.log('Available TTS methods:', Object.keys(Tts));
+    // voice handler events
+    Voice.onSpeechStart = speechStartHandler;
+    Voice.onSpeechEnd = speechEndHandler;
+    Voice.onSpeechResults = speechResultsHandler;
+    Voice.onSpeechError = speechErrorHandler;
+
+    // tts handler events
+    Tts.addEventListener('tts-start', event => console.log('start', event));
+    Tts.addEventListener('tts-progress', event =>
+      console.log('progress', event),
+    );
+    Tts.addEventListener('tts-finish', event => console.log('finish', event));
+    Tts.addEventListener('tts-cancel', event => console.log('cancel', event));
+
+    return () => {
+      // destroy the voice instance
+      Voice.destroy().then(Voice.removeAllListeners());
+    };
+  }, []);
 
   return (
     <View className="flex-1 bg-white">
@@ -22,8 +139,8 @@ const HomeScreen = () => {
         {/* bot icon */}
         <View className="flex-row justify-center">
           <Image
-            style={{ width: wp(25), height: hp(25) }}
-            source={require('../../assets/images/aiChatbot.png')}
+            style={{ width: wp(27), height: hp(15) }}
+            source={require('../../assets/images/aiChatbot2.png')}
           />
         </View>
 
@@ -44,6 +161,7 @@ const HomeScreen = () => {
                 bounces={false}
                 className="space-y-4"
                 showsVerticalScrollIndicator={false}
+                ref={scrollViewRef}
               >
                 {messages.map((message, index) => {
                   if (message.role === 'assistant') {
@@ -109,20 +227,31 @@ const HomeScreen = () => {
         )}
         {/* recording, clear and stop buttons*/}
         <View className="flex items-center justify-center">
-          {recording ? (
-            <TouchableOpacity>
+          {loading ? (
+            <View className="flex-1, justify-center, items-center">
+              {/* <LoadingSpinner size={200} /> */}
+              <Image
+                style={{ width: wp(40), height: wp(40) }}
+                source={require('../../assets/images/spinner.gif')}
+              />
+              <Text className="text-white, mt-20">Processing...</Text>
+            </View>
+          ) : recording ? (
+            <TouchableOpacity onPress={stopRecording}>
+              {/* Stop Recording Button */}
               <Image
                 className="rounded-full"
-                style={{ width: wp(10), height: hp(10) }}
-                source={require('../../assets/images/record-button.png')}
+                style={{ width: wp(20), height: hp(10) }}
+                source={require('../../assets/images/ai-stop-button.png')}
               />
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity>
+            <TouchableOpacity onPress={startRecording}>
+              {/* Start Recording Button */}
               <Image
                 className="rounded-full"
-                style={{ width: wp(10), height: hp(10) }}
-                source={require('../../assets/images/record-button.png')}
+                style={{ width: wp(20), height: hp(10) }}
+                source={require('../../assets/images/ai-record-button.png')}
               />
             </TouchableOpacity>
           )}
