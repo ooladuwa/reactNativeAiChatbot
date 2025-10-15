@@ -17,6 +17,7 @@ import Features from '../components/Features';
 import { apiCall } from '../api/openAi';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Tts from 'react-native-tts';
+import { OPEN_AI_KEY } from '@env';
 
 const HomeScreen = () => {
   const [messages, setMessages] = useState([]);
@@ -112,7 +113,7 @@ const HomeScreen = () => {
   };
 
   useEffect(() => {
-    console.log('Available TTS methods:', Object.keys(Tts));
+    console.log('open ai key:', OPEN_AI_KEY);
     // voice handler events
     Voice.onSpeechStart = speechStartHandler;
     Voice.onSpeechEnd = speechEndHandler;

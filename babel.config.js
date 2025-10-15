@@ -1,4 +1,4 @@
-module.exports = function(api) {
+module.exports = function (api) {
   api.cache(true);
   return {
     presets: [
@@ -9,6 +9,15 @@ module.exports = function(api) {
     ],
     plugins: [
       // other plugins you need...
+      [
+        'module:react-native-dotenv',
+        {
+          moduleName: '@env',
+          path: '.env',
+          safe: false,
+          allowUndefined: true,
+        },
+      ],
       // react-native-reanimated plugin MUST be last if you use Reanimated:
       'react-native-reanimated/plugin',
     ],

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { openAiKey } from '../constants';
+import { OPEN_AI_KEY } from '@env';
 
 const chatGptEndpoint = 'https://api.openai.com/v1/chat/completions';
 const dalleEndpoint = 'https://api.openai.com/v1/images/generations';
@@ -9,7 +9,7 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 // Create a fresh axios instance for each retry to avoid connection reuse issues
 const freshClient = axios.create({
   headers: {
-    Authorization: 'Bearer ' + openAiKey,
+    Authorization: 'Bearer ' + OPEN_AI_KEY,
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
@@ -34,7 +34,6 @@ export const apiCall = async (prompt, messages, retryCount = 0) => {
 
     // Handle non-2xx responses manually
     if (res.status >= 200 && res.status < 300) {
-      //   console.log('openai response naj', res.data.choices[0].message);
       let isArt = res.data.choices[0].message.content;
       if (isArt.toLowerCase().includes('yes')) {
         console.log('dalle api call');
